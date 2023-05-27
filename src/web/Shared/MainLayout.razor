@@ -1,0 +1,11 @@
+﻿@inherits LayoutComponentBase
+@inject IConfiguration Config
+
+<PageTitle>@(Config.GetValue<string>("ApplicationName"))</PageTitle><!-- Fallback title when page doesn't have one. -->
+<Navbar/>
+
+<main>
+    <div class="p-3">
+        @Body
+    </div>
+</main>

@@ -1,6 +1,2 @@
 ﻿@page "/"
-@inject IConfiguration Config
-
-<PageTitle>@(Config.GetValue<string>("ApplicationName"))</PageTitle>
-
-<h1>Hello, world!</h1>
+<RedirectToRoute Route="/me"/>

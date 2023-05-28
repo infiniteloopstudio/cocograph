@@ -14,7 +14,9 @@
         <PackageReference Include="InfiniteLoop" Version="2.1.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.5" NoWarn="NU1605" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="7.0.5" NoWarn="NU1605" />
+        <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="7.0.5" />
         <PackageReference Include="Microsoft.Identity.Web" Version="2.11.0" />
+        <PackageReference Include="Microsoft.Identity.Web.MicrosoftGraph" Version="2.11.0" />
         <PackageReference Include="Microsoft.Identity.Web.UI" Version="2.11.0" />
     </ItemGroup>
 

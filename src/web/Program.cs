@@ -6,7 +6,11 @@ builder
 	{
 		services
 			.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-			.AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
+			.AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"))
+			.EnableTokenAcquisitionToCallDownstreamApi(builder.Configuration.GetValue<string>("DownstreamApi:Scopes")?.Split(' '))
+			.AddMicrosoftGraph()
+			.AddDistributedTokenCaches();
+		services.AddStackExchangeRedisCache(options => options.Configuration = builder.Configuration.GetConnectionString("Redis"));
 		services.AddAuthorization(options => options.FallbackPolicy = options.DefaultPolicy);
 		services
 			.AddControllersWithViews()
@@ -17,7 +21,8 @@ builder
 			.AddServerSideBlazor()
 			.AddMicrosoftIdentityConsentHandler();
 	})
-	.AddSingleton<WeatherForecastService>();
+	.AddSingleton<ITokenCacheProvider, RedisTokenCacheProvider>()
+	.AddTransient<UserGraphService>();
 
 await builder
 	.Build()
@@ -31,7 +36,9 @@ await builder
 		app
 			.UseHttpsRedirection()
 			.UseStaticFiles()
-			.UseRouting();
+			.UseRouting()
+			.UseAuthentication()
+			.UseAuthorization();
 
 		app.MapControllers();
 		app.MapBlazorHub();

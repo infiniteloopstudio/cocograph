@@ -1,7 +1,22 @@
 @page "/me"
+@using System.Text.Json
+@inject UserGraphService Graph
 
 <h3>Me</h3>
 
+<div>
+    @if (userProfile is null)
+    {
+        <button @onclick="OnLoadUserProfileButtonClickedAsync">Load My Profile</button>
+    }
+    else
+    {
+        <pre>@JsonSerializer.Serialize(userProfile)</pre>
+    }
+</div>
+
 @code {
-    
+
+    UserProfileResponseModel? userProfile;
+    private async Task OnLoadUserProfileButtonClickedAsync() => userProfile = await Graph.GetCurrentUserProfileAsync();
 }

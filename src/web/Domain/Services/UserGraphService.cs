@@ -6,7 +6,7 @@ public class UserGraphService
 {
 	/* Dependencies */
 	private readonly GraphServiceClient _graphServiceClient;
-	
+
 	/// <summary>
 	///		Default injectable constructor.
 	/// </summary>
@@ -16,7 +16,7 @@ public class UserGraphService
 	{
 		var currentUser = await _graphServiceClient.Me.Request().GetAsync();
 		if (currentUser is null) return null;
-		
+
 		/*
 		 * Get user photo
 		 */
@@ -26,14 +26,14 @@ public class UserGraphService
 			await using var photoStream = await _graphServiceClient.Me.Photo.Content.Request().GetAsync();
 			photoData = Convert.ToBase64String(((MemoryStream)photoStream).ToArray());
 		}
-		catch (Exception pex)
-		{
-			Console.WriteLine($"{pex.Message}");
-		}
-		
+		catch (Exception pex) { Console.WriteLine($"{pex.Message}"); }
+
 		return new()
 		{
-			User = currentUser,
+			DisplayName = currentUser.DisplayName,
+			Surname = currentUser.Surname,
+			GivenName = currentUser.GivenName,
+			UserPrincipalName = currentUser.UserPrincipalName,
 			Photo = photoData
 		};
 	}

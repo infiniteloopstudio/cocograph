@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder
@@ -14,7 +16,8 @@ builder
 		services.AddAuthorization(options => options.FallbackPolicy = options.DefaultPolicy);
 		services
 			.AddControllersWithViews()
-			.AddMicrosoftIdentityUI();
+			.AddMicrosoftIdentityUI()
+			.AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase);
 		services.AddRazorPages();
 		services
 			.AddHttpContextAccessor()

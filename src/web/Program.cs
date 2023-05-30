@@ -25,7 +25,9 @@ builder
 			.AddMicrosoftIdentityConsentHandler();
 	})
 	.AddSingleton<ITokenCacheProvider, RedisTokenCacheProvider>()
-	.AddTransient<TokenService>()
+	.AddTransient<AzureHttpClient>()
+	.AddTransient<AzureRoleAssignmentService>()
+	.AddTransient<AzureSubscriptionService>()
 	.AddTransient<MsGraphService>();
 
 await builder
@@ -48,4 +50,5 @@ await builder
 		app.MapBlazorHub();
 		app.MapFallbackToPage("/_Host");
 	})
-	.RunAsync();
+	.RunAsync()
+	.ConfigureAwait(false);

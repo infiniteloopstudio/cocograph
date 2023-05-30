@@ -1,60 +1,111 @@
 @page "/me"
-@inject MsGraphService Graph
+@inject MsGraphService GraphService
+@inject AzureSubscriptionService SubscriptionService
+@inject AzureRoleAssignmentService RoleAssignmentService
 @inject MicrosoftIdentityConsentAndConditionalAccessHandler ConsentHandler
 
 <h3>Me</h3>
-@if (_userProfile is null) { <div>Loading...</div> }
+@if (_userProfile is null || _subscriptions is null || _roleAssignments is null) { <div>Loading...</div> }
 else
 {
     <div class="container">
-        <form class="row g-3">
-            <fieldset disabled>
-                <div class="col-md-4">
-                    <label for="givenName" class="form-label">First Name</label>
-                    <input id="givenName" class="form-control" type="text" value="@_userProfile.GivenName"/>
+        <div class="row">
+            <div class="col-md-6">
+                <form class="row g-3">
+                    <fieldset disabled>
+                        <div class="col-md-12">
+                            <label for="id" class="form-label">Id</label>
+                            <input id="id" class="form-control" type="text" value="@_userProfile.ObjectId"/>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="givenName" class="form-label">First Name</label>
+                            <input id="givenName" class="form-control" type="text" value="@_userProfile.GivenName"/>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="surname" class="form-label">Last Name</label>
+                            <input id="surname" class="form-control" type="text" value="@_userProfile.Surname"/>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="displayName" class="form-label">Display Name</label>
+                            <input id="displayName" class="form-control" type="text" value="@_userProfile.DisplayName"/>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="email" class="form-label">Mail</label>
+                            <input id="email" class="form-control" type="text" value="@_userProfile.Mail"/>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="address" class="form-label">Address</label>
+                            <input id="address" class="form-control" type="text" value="@_userProfile.Address"/>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="city" class="form-label">City</label>
+                            <input id="city" class="form-control" type="text" value="@_userProfile.City"/>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="state" class="form-label">State</label>
+                            <input id="state" class="form-control" type="text" value="@_userProfile.State"/>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="zip" class="form-label">Zip</label>
+                            <input id="zip" class="form-control" type="text" value="@_userProfile.ZipCode"/>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="subscriptionDropdown" class="form-label">Subscriptions</label>
+                    <select id="subscriptionDropdown" class="form-control" @onchange="HandleSubscriptionChange">
+                        @foreach (var subscription in _subscriptions)
+                        {
+                            <option value="@subscription.SubscriptionId">@subscription.Name</option>
+                        }
+                    </select>
                 </div>
-                <div class="col-md-4">
-                    <label for="surname" class="form-label">Last Name</label>
-                    <input id="surname" class="form-control" type="text" value="@_userProfile.Surname"/>
+                <div class="form-group">
+                    <label for="resourcesList" class="form-label">Resources</label>
+                    <ul id="resourcesList" class="list-group">
+                        @foreach (var ra in _roleAssignments)
+                        {
+                            <li class="list-group-item">@ra.Scope := @ra.RoleProperties.RoleName</li>
+                        }
+                    </ul>
                 </div>
-                <div class="col-md-4">
-                    <label for="displayName" class="form-label">Display Name</label>
-                    <input id="displayName" class="form-control" type="text" value="@_userProfile.DisplayName"/>
-                </div>
-                <div class="col-md-4">
-                    <label for="email" class="form-label">Mail</label>
-                    <input id="email" class="form-control" type="text" value="@_userProfile.Mail"/>
-                </div>
-                <div class="col-md-4">
-                    <label for="address" class="form-label">Address</label>
-                    <input id="address" class="form-control" type="text" value="@_userProfile.Address"/>
-                </div>
-                <div class="col-md-4">
-                    <label for="city" class="form-label">City</label>
-                    <input id="city" class="form-control" type="text" value="@_userProfile.City"/>
-                </div>
-                <div class="col-md-4">
-                    <label for="state" class="form-label">State</label>
-                    <input id="state" class="form-control" type="text" value="@_userProfile.State"/>
-                </div>
-                <div class="col-md-4">
-                    <label for="zip" class="form-label">Zip</label>
-                    <input id="zip" class="form-control" type="text" value="@_userProfile.ZipCode"/>
-                </div>
-            </fieldset>
-        </form>
+            </div>
+        </div>
     </div>
 }
 
 @code {
-    private UserProfileResponseModel? _userProfile;
+    private UserProfile? _userProfile;
+    private IEnumerable<Subscription>? _subscriptions;
+    private IEnumerable<RoleAssignment>? _roleAssignments;
+    private string _selectedSubscriptionId = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        try { _userProfile = await Graph.GetUserProfileAsync(); }
+        try { _userProfile = await GraphService.GetCurrentUserProfileAsync(); }
         catch (Exception ex) {
             ConsentHandler.HandleException(ex);
         }
+
+        _subscriptions = await SubscriptionService.GetSubscriptionsAsync();
+        _selectedSubscriptionId = _subscriptions.FirstOrDefault()?.SubscriptionId ?? string.Empty;
+        if (_selectedSubscriptionId == string.Empty) return;
+
+        _roleAssignments = await RoleAssignmentService.GetRoleAssignments(_userProfile.ObjectId, _selectedSubscriptionId);
+    }
+
+    private async Task HandleSubscriptionChange(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()))
+        {
+            _selectedSubscriptionId = string.Empty;
+            return;
+        }
+
+        _selectedSubscriptionId = e.Value.ToString()!;
+        _roleAssignments = await RoleAssignmentService.GetRoleAssignments(_userProfile.ObjectId, _selectedSubscriptionId);
     }
 
 }

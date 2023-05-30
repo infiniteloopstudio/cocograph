@@ -1,22 +1,60 @@
 @page "/me"
-@using System.Text.Json
-@inject UserGraphService Graph
+@inject MsGraphService Graph
+@inject MicrosoftIdentityConsentAndConditionalAccessHandler ConsentHandler
 
 <h3>Me</h3>
-
-<div>
-    @if (userProfile is null)
-    {
-        <button @onclick="OnLoadUserProfileButtonClickedAsync">Load My Profile</button>
-    }
-    else
-    {
-        <pre>@JsonSerializer.Serialize(userProfile)</pre>
-    }
-</div>
+@if (_userProfile is null) { <div>Loading...</div> }
+else
+{
+    <div class="container">
+        <form class="row g-3">
+            <fieldset disabled>
+                <div class="col-md-4">
+                    <label for="givenName" class="form-label">First Name</label>
+                    <input id="givenName" class="form-control" type="text" value="@_userProfile.GivenName"/>
+                </div>
+                <div class="col-md-4">
+                    <label for="surname" class="form-label">Last Name</label>
+                    <input id="surname" class="form-control" type="text" value="@_userProfile.Surname"/>
+                </div>
+                <div class="col-md-4">
+                    <label for="displayName" class="form-label">Display Name</label>
+                    <input id="displayName" class="form-control" type="text" value="@_userProfile.DisplayName"/>
+                </div>
+                <div class="col-md-4">
+                    <label for="email" class="form-label">Mail</label>
+                    <input id="email" class="form-control" type="text" value="@_userProfile.Mail"/>
+                </div>
+                <div class="col-md-4">
+                    <label for="address" class="form-label">Address</label>
+                    <input id="address" class="form-control" type="text" value="@_userProfile.Address"/>
+                </div>
+                <div class="col-md-4">
+                    <label for="city" class="form-label">City</label>
+                    <input id="city" class="form-control" type="text" value="@_userProfile.City"/>
+                </div>
+                <div class="col-md-4">
+                    <label for="state" class="form-label">State</label>
+                    <input id="state" class="form-control" type="text" value="@_userProfile.State"/>
+                </div>
+                <div class="col-md-4">
+                    <label for="zip" class="form-label">Zip</label>
+                    <input id="zip" class="form-control" type="text" value="@_userProfile.ZipCode"/>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+}
 
 @code {
+    private UserProfileResponseModel? _userProfile;
 
-    UserProfileResponseModel? userProfile;
-    private async Task OnLoadUserProfileButtonClickedAsync() => userProfile = await Graph.GetCurrentUserProfileAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        try { _userProfile = await Graph.GetUserProfileAsync(); }
+        catch (Exception ex) {
+            ConsentHandler.HandleException(ex);
+        }
+    }
+
 }

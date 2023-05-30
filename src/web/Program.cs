@@ -9,9 +9,9 @@ builder
 		services
 			.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
 			.AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"))
-			.EnableTokenAcquisitionToCallDownstreamApi(builder.Configuration.GetValue<string>("DownstreamApi:Scopes")?.Split(' '))
-			.AddMicrosoftGraph()
-			.AddDistributedTokenCaches();
+			.EnableTokenAcquisitionToCallDownstreamApi()
+			.AddDistributedTokenCaches()
+			.AddMicrosoftGraph(builder.Configuration.GetSection("Graph"));
 		services.AddStackExchangeRedisCache(options => options.Configuration = builder.Configuration.GetConnectionString("Redis"));
 		services.AddAuthorization(options => options.FallbackPolicy = options.DefaultPolicy);
 		services
@@ -25,7 +25,8 @@ builder
 			.AddMicrosoftIdentityConsentHandler();
 	})
 	.AddSingleton<ITokenCacheProvider, RedisTokenCacheProvider>()
-	.AddTransient<UserGraphService>();
+	.AddTransient<TokenService>()
+	.AddTransient<MsGraphService>();
 
 await builder
 	.Build()
